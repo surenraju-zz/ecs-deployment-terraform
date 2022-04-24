@@ -14,6 +14,18 @@ variable "public_subnet_3_cidr" {
   description = "CIDR Block for Public Subnet 3"
 }
 
+variable "private_subnet_1_cidr" {
+  description = "CIDR Block for Private Subnet 1"
+}
+
+variable "private_subnet_2_cidr" {
+  description = "CIDR Block for Private Subnet 2"
+}
+
+variable "private_subnet_3_cidr" {
+  description = "CIDR Block for Private Subnet 3"
+}
+
 
 variable "cpu" {
   default     = 1024
