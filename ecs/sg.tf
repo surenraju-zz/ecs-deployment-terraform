@@ -113,3 +113,25 @@ resource "aws_security_group" "private-security-group" {
   }
 }
 
+
+resource "aws_security_group" "efs-security-group" {
+
+  name        = "${var.project}-${var.environment}-efs-sg"
+  description = "Allow access to EFS"
+  vpc_id      = aws_vpc.vpc.id
+
+  ingress {
+    description = "Allow NFS access"
+    from_port   = 2049
+    protocol    = "TCP"
+    to_port     = 2049
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.project}-${var.environment}-efs-sg"
+    Environment = var.environment
+    Project     = var.project
+    Owner       = var.owner
+  }
+}

@@ -4,7 +4,9 @@ resource "aws_ecs_cluster" "cluster" {
     name  = "containerInsights"
     value = "enabled"
   }
-  capacity_providers = ["FARGATE", ]
+  capacity_providers = ["FARGATE"]
+
+  
 }
 
 resource "aws_ecs_service" "service" {
@@ -57,6 +59,14 @@ resource "aws_ecs_task_definition" "app" {
     {
       name  = "${var.project}-${var.environment}"
       image = "apache/nifi:1.16.0"
+      logConfiguration = {
+                logDriver = "awslogs",
+                options = {
+                    awslogs-group         = aws_cloudwatch_log_group.awslogs-ecs.name,
+                    awslogs-region        = var.region
+                    awslogs-stream-prefix = "nifi"
+                }
+            }
       portMappings = [
         {
           containerPort = var.port
@@ -64,11 +74,113 @@ resource "aws_ecs_task_definition" "app" {
           protocol      = "tcp"
         }
       ]
+      mountPoints = [
+        {
+            sourceVolume = "nifi-state",
+            containerPath = "/opt/nifi/nifi-current/state",
+            readOnly: false
+        },
+        {
+            sourceVolume = "nifi-database-repository",
+            containerPath = "/opt/nifi/nifi-current/database_repository",
+            readOnly: false
+        },
+
+        {
+            sourceVolume = "nifi-flowfile-repository",
+            containerPath = "/opt/nifi/nifi-current/flowfile_repository",
+            readOnly: false
+        },
+        {
+            sourceVolume = "nifi-content-repository",
+            containerPath = "/opt/nifi/nifi-current/content_repository",
+            readOnly: false
+        },
+        {
+            sourceVolume = "nifi-provenance-repository",
+            containerPath = "/opt/nifi/nifi-current/provenance_repository",
+            readOnly: false
+        }
+      ]
       essential = true
       environment : local.app_definitions
     }
     ]
   )
+
+  volume {
+    name = "nifi-state"
+    efs_volume_configuration {
+      file_system_id     = aws_efs_file_system.efs.id
+      root_directory     = "/opt/nifi/nifi-current/state"
+      transit_encryption = "ENABLED"
+      authorization_config {
+        access_point_id = aws_efs_access_point.nifi-state.id
+        iam             = "ENABLED"
+      }
+    }
+  }
+
+  volume {
+    name = "nifi-database-repository"
+    efs_volume_configuration {
+      file_system_id     = aws_efs_file_system.efs.id
+      root_directory     = "/opt/nifi/nifi-current/database_repository"
+      transit_encryption = "ENABLED"
+      authorization_config {
+        access_point_id = aws_efs_access_point.nifi-database-repository.id
+        iam             = "ENABLED"
+      }
+    }
+  }
+
+  volume {
+    name = "nifi-flowfile-repository"
+    efs_volume_configuration {
+      file_system_id     = aws_efs_file_system.efs.id
+      root_directory     = "/opt/nifi/nifi-current/flowfile_repository"
+      transit_encryption = "ENABLED"
+      authorization_config {
+        access_point_id = aws_efs_access_point.nifi-flowfile-repository.id
+        iam             = "ENABLED"
+      }
+    }
+  }
+
+    volume {
+    name = "nifi-content-repository"
+    efs_volume_configuration {
+      file_system_id     = aws_efs_file_system.efs.id
+      root_directory     = "/opt/nifi/nifi-current/content_repository"
+      transit_encryption = "ENABLED"
+      authorization_config {
+        access_point_id = aws_efs_access_point.nifi-content-repository.id
+        iam             = "ENABLED"
+      }
+    }
+  }
+
+  volume {
+    name = "nifi-provenance-repository"
+    efs_volume_configuration {
+      file_system_id     = aws_efs_file_system.efs.id
+      root_directory     = "/opt/nifi/nifi-current/provenance_repository"
+      transit_encryption = "ENABLED"
+      authorization_config {
+        access_point_id = aws_efs_access_point.nifi-provenance-repository.id
+        iam             = "ENABLED"
+      }
+    }
+  }
+
+  depends_on = [
+    aws_efs_file_system.efs,
+    aws_efs_access_point.nifi-state,
+    aws_efs_access_point.nifi-database-repository,
+    aws_efs_access_point.nifi-flowfile-repository,
+    aws_efs_access_point.nifi-content-repository,
+    aws_efs_access_point.nifi-provenance-repository
+  ]
 }
 
 locals {
