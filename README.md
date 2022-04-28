@@ -1,2 +1,10 @@
-# ecs-deployment-terraform
-Terraform scripts to deploy ECS and container application using GitHub actions
+# About
+Terraform and Github Actions automation to deploy 
+- AWS VPC
+- AWS Elastic Container Service(ECS) 
+- EFS persistence storage
+- NIFI application
+- Load Balancer
+
+# Architecture
+![Architecture](architecture.png)
